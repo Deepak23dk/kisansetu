@@ -151,31 +151,9 @@ class MemorySnippet(BaseModel):
     created_at: str
 
 # -------------------------------------------------------------
-# Hardcoded Mandi Price Data
+# Mandi Price Data from market_data.py
 # -------------------------------------------------------------
-MARKET_PRICES = {
-    "maharashtra": {
-        "tomato": {"price_range": "₹20 - ₹28 per kg", "mandi": "Nashik Mandi", "trend": "Stable"},
-        "onion": {"price_range": "₹15 - ₹22 per kg", "mandi": "Lasalgaon Mandi", "trend": "Rising"},
-        "potato": {"price_range": "₹18 - ₹25 per kg", "mandi": "Pune Mandi", "trend": "Falling"},
-        "rice": {"price_range": "₹3,500 - ₹4,200 per quintal", "mandi": "Nagpur Mandi", "trend": "Stable"},
-    },
-    "punjab": {
-        "wheat": {"price_range": "₹2,275 - ₹2,400 per quintal", "mandi": "Khanna Mandi", "trend": "Rising"},
-        "rice": {"price_range": "₹3,800 - ₹4,500 per quintal", "mandi": "Amritsar Mandi", "trend": "Stable"},
-        "potato": {"price_range": "₹14 - ₹20 per kg", "mandi": "Jalandhar Mandi", "trend": "Falling"},
-    },
-    "karnataka": {
-        "tomato": {"price_range": "₹22 - ₹30 per kg", "mandi": "Kolar Mandi", "trend": "Rising"},
-        "onion": {"price_range": "₹18 - ₹25 per kg", "mandi": "Bangalore Mandi", "trend": "Stable"},
-        "rice": {"price_range": "₹4,000 - ₹5,000 per quintal", "mandi": "Shimoga Mandi", "trend": "Rising"},
-    },
-    "uttar pradesh": {
-        "wheat": {"price_range": "₹2,300 - ₹2,500 per quintal", "mandi": "Hapur Mandi", "trend": "Stable"},
-        "potato": {"price_range": "₹12 - ₹18 per kg", "mandi": "Agra Mandi", "trend": "Rising"},
-        "onion": {"price_range": "₹14 - ₹20 per kg", "mandi": "Kanpur Mandi", "trend": "Falling"},
-    }
-}
+from market_data import MARKET_PRICES
 
 # -------------------------------------------------------------
 # Endpoints
@@ -268,6 +246,8 @@ def diagnose_crop_voice(payload: DiagnoseInput):
         lang_code = "en"
         if payload.language.lower() in ["hi", "hindi"]:
             lang_code = "hi"
+        elif payload.language.lower() in ["ta", "tamil"]:
+            lang_code = "ta"
             
         tts = gTTS(text=diag.advice, lang=lang_code)
         fp = io.BytesIO()
