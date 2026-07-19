@@ -14,6 +14,19 @@ from gtts import gTTS
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("KisanSetu")
 
+# Load .env file if it exists
+if os.path.exists(".env"):
+    try:
+        with open(".env", "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    os.environ[key.strip()] = val.strip()
+        logger.info("Loaded environment variables from .env file.")
+    except Exception as e:
+        logger.error(f"Failed to load .env file: {e}")
+
 # -------------------------------------------------------------
 # OpenAI Patching for Mem0 Local Execution
 # -------------------------------------------------------------

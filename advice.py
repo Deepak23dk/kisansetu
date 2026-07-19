@@ -79,8 +79,8 @@ def get_advice_real(
 
     # Configure Gemini API
     genai.configure(api_key=api_key)
-    # Using gemini-1.5-flash for fast, multimodal, free-tier-friendly execution
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    # Using gemini-2.5-flash for fast, multimodal execution
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     # 1. Build prompt with memory history context
     history_str = ""
