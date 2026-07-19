@@ -1,0 +1,27 @@
+version: api.keploy.io/v1beta1
+kind: Http
+name: test-5
+spec:
+  metadata:
+    name: diagnose
+    operation: POST
+  request:
+    method: POST
+    url: /diagnose
+    header:
+      accept: '*/*'
+      connection: keep-alive
+      content-length: '225'
+      content-type: application/json
+    body: '{"farmer_id":"farmer_1","message":"Here is a photo of my crop leaf","image_base64":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=","image_media_type":"image/png","language":"en"}'
+  response:
+    status_code: 200
+    header:
+      content-type: application/json
+    body: '{"farmer_id":"farmer_1","advice":"[Fallback Stub Advice]\nDiagnosis: Inconclusive
+      disease patterns.\nRecommended Action:\n1. Keep the soil moisture balanced and
+      clear any surrounding weeds.\n2. Monitor the leaves for changes in spots or
+      pest populations over the next 2-3 days.\n3. Visit your nearest Krishi Vigyan
+      Kendra (KVK) or consult a local agricultural officer with a leaf sample.","remembered_context":["Farmer
+      reported crop issue: My tomato leaf has yellow spots and wilt"]}'
+    status_message: OK

@@ -1,0 +1,22 @@
+version: api.keploy.io/v1beta1
+kind: Http
+name: test-1
+spec:
+  metadata:
+    name: market-price
+    operation: GET
+  request:
+    method: GET
+    url: /market-price?crop=tomato&location=maharashtra
+    header:
+      accept: '*/*'
+      connection: keep-alive
+    body: ''
+  response:
+    status_code: 200
+    header:
+      content-type: application/json
+    body: "{\"crop\":\"tomato\",\"location\":\"maharashtra\",\"price_range\":\"\u20B9\
+      20 - \u20B928 per kg\",\"mandi\":\"Nashik Mandi\",\"trend\":\"Stable\",\"mocked\"\
+      :true,\"timestamp\":\"2026-07-19T07:37:17.847905+00:00\"}"
+    status_message: OK

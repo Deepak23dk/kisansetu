@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kisansetu-v2
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: GEMINI_API_KEY
+        sync: false
+        placeholder: "Enter your Gemini API key (from Google AI Studio)"
+      - key: OPENAI_API_KEY
+        value: "mock-openai-key-for-kisansetu"

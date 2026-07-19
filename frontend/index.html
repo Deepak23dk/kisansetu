@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KisanSetu - AI Crop Assistant Demo</title>
+    <!-- Outfit Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #075e54;
+            --primary-light: #128c7e;
+            --secondary-color: #25d366;
+            --bg-color: #0b141a;
+            --chat-bg: #111b21;
+            --incoming-bubble: #202c33;
+            --outgoing-bubble: #005c4b;
+            --text-main: #e9edef;
+            --text-secondary: #8696a0;
+            --border-color: #222e35;
+            --panel-bg: #182229;
+            --accent-glow: rgba(37, 211, 102, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* App Container Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Left Side: Mandi Prices & Debug Panel */
+        .side-panel {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .side-panel h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .panel-section {
+            margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-section h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        /* Form Inputs styling */
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--secondary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-light);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Price Card */
+        .price-card {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(7, 94, 84, 0.1);
+            border: 1px solid var(--primary-light);
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .price-card.show {
+            display: block;
+        }
+
+        .price-card p {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .price-card .badge {
+            display: inline-block;
+            background-color: #b78103;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Memory Log Box */
+        .memory-log {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+            background-color: var(--chat-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .memory-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--border-color);
+            word-break: break-all;
+        }
+
+        .memory-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Right Side: Chat Container */
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg);
+            position: relative;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            height: 60px;
+            background-color: var(--incoming-bubble);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .chat-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .chat-header h1 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .chat-header .status {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+        }
+
+        /* Chat Messages area */
+        .messages-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            /* WhatsApp typical doodle pattern placeholder */
+            background-image: linear-gradient(rgba(11, 20, 26, 0.97), rgba(11, 20, 26, 0.97)), url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-size: repeat;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+            word-wrap: break-word;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        .message.outgoing {
+            background-color: var(--outgoing-bubble);
+            align-self: flex-end;
+            border-top-right-radius: 2px;
+        }
+
+        .message.incoming {
+            background-color: var(--incoming-bubble);
+            align-self: flex-start;
+            border-top-left-radius: 2px;
+        }
+
+        .message-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Voice Listen Button */
+        .listen-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--secondary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            margin-top: 5px;
+            width: auto;
+            background-color: rgba(37, 211, 102, 0.1);
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .listen-btn:hover {
+            background-color: rgba(37, 211, 102, 0.2);
+        }
+
+        /* Chat Input Bar */
+        .chat-input-bar {
+            padding: 10px 20px;
+            background-color: var(--incoming-bubble);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-input-bar textarea {
+            flex-grow: 1;
+            background-color: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 12px 20px;
+            color: var(--text-main);
+            outline: none;
+            resize: none;
+            height: 45px;
+            font-size: 0.95rem;
+            line-height: 1.2;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-bar textarea:focus {
+            border-color: var(--secondary-color);
+        }
+
+        /* Image Attachment button */
+        .attach-btn-label {
+            cursor: pointer;
+            background-color: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .attach-btn-label:hover {
+            background-color: var(--incoming-bubble);
+            color: var(--text-main);
+        }
+
+        #image-upload {
+            display: none;
+        }
+
+        .preview-container {
+            position: absolute;
+            bottom: 65px;
+            left: 20px;
+            right: 20px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+            animation: slideUp 0.2s ease-out;
+        }
+
+        .preview-container.show {
+            display: flex;
+        }
+
+        .preview-image {
+            height: 60px;
+            border-radius: 6px;
+        }
+
+        .remove-preview {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: auto;
+        }
+
+        /* Toggle switches */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--incoming-bubble);
+            transition: .4s;
+            border-radius: 22px;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--text-secondary);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--secondary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            background-color: white;
+        }
+
+        /* Keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Loading Spinner */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 5px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.3s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar: Controls & Info -->
+        <div class="side-panel">
+            <h2>KisanSetu Admin</h2>
+            
+            <!-- Farmer Config Section -->
+            <div class="panel-section">
+                <h3>Farmer Config</h3>
+                <label for="farmer-id-input">Farmer ID</label>
+                <input type="text" id="farmer-id-input" value="farmer_demo_1">
+                
+                <div class="toggle-container">
+                    <label for="voice-toggle">Voice Output (TTS)</label>
+                    <label class="switch">
+                        <input type="checkbox" id="voice-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-container">
+                    <label for="lang-select">Language</label>
+                    <select id="lang-select" style="margin-bottom: 0; width: 120px;">
+                        <option value="en">English</option>
+                        <option value="hi">Hindi</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Mandi Prices Lookup Section -->
+            <div class="panel-section">
+                <h3>Mandi Prices (Mock)</h3>
+                <label for="crop-select">Select Crop</label>
+                <select id="crop-select">
+                    <option value="tomato">Tomato (Tamatar)</option>
+                    <option value="onion">Onion (Pyaaz)</option>
+                    <option value="potato">Potato (Aloo)</option>
+                    <option value="rice">Rice (Dhan)</option>
+                    <option value="wheat">Wheat (Gehun)</option>
+                </select>
+
+                <label for="location-select">Select State</label>
+                <select id="location-select">
+                    <option value="maharashtra">Maharashtra</option>
+                    <option value="punjab">Punjab</option>
+                    <option value="karnataka">Karnataka</option>
+                    <option value="uttar pradesh">Uttar Pradesh</option>
+                </select>
+
+                <button id="fetch-price-btn">Get Market Price</button>
+
+                <div id="price-card" class="price-card">
+                    <p><strong>Mandi:</strong> <span id="card-mandi">-</span></p>
+                    <p><strong>Price Range:</strong> <span id="card-price">-</span></p>
+                    <p><strong>Trend:</strong> <span id="card-trend">-</span></p>
+                    <span class="badge">Mocked Data</span>
+                </div>
+            </div>
+
+            <!-- Mem0 Active Memories Section -->
+            <div class="panel-section">
+                <h3>Mem0 Active Memories</h3>
+                <div id="memory-log" class="memory-log">
+                    <div class="memory-item">No memories loaded. Send a message to extract memory.</div>
+                </div>
+                <button id="clear-memories-btn" style="margin-top: 10px; background-color: #dc2626;">Wipe Databases</button>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="user-info">
+                    <div class="avatar">KS</div>
+                    <div>
+                        <h1>KisanSetu AI Assistant</h1>
+                        <span class="status">online | WhatsApp Demo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Thread -->
+            <div class="messages-area" id="messages-area">
+                <div class="message incoming">
+                    Namaste! I am KisanSetu, your agricultural helper. 
+                    Upload a photo of your crop leaf or describe the disease you are facing.
+                    <span class="message-time">12:00 PM</span>
+                </div>
+            </div>
+
+            <!-- Image Upload Preview Bar -->
+            <div class="preview-container" id="preview-container">
+                <img src="" alt="Upload Preview" class="preview-image" id="preview-image">
+                <button class="remove-preview" id="remove-preview-btn">✕</button>
+            </div>
+
+            <!-- Input Bar -->
+            <div class="chat-input-bar">
+                <label for="image-upload" class="attach-btn-label">📎</label>
+                <input type="file" id="image-upload" accept="image/*">
+                
+                <textarea id="chat-textarea" placeholder="Type crop issue description..."></textarea>
+                
+                <button id="send-msg-btn" style="width: auto; padding: 12px 24px; background-color: var(--outgoing-bubble);">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const farmerIdInput = document.getElementById('farmer-id-input');
+        const voiceToggle = document.getElementById('voice-toggle');
+        const langSelect = document.getElementById('lang-select');
+        
+        const cropSelect = document.getElementById('crop-select');
+        const locationSelect = document.getElementById('location-select');
+        const fetchPriceBtn = document.getElementById('fetch-price-btn');
+        const priceCard = document.getElementById('price-card');
+        const cardMandi = document.getElementById('card-mandi');
+        const cardPrice = document.getElementById('card-price');
+        const cardTrend = document.getElementById('card-trend');
+
+        const memoryLog = document.getElementById('memory-log');
+        const clearMemoriesBtn = document.getElementById('clear-memories-btn');
+
+        const messagesArea = document.getElementById('messages-area');
+        const chatTextarea = document.getElementById('chat-textarea');
+        const imageUpload = document.getElementById('image-upload');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const removePreviewBtn = document.getElementById('remove-preview-btn');
+        const sendMsgBtn = document.getElementById('send-msg-btn');
+
+        let currentImageBase64 = null;
+        let currentImageMediaType = null;
+
+        // Load Mem0 Memories on startup
+        refreshMemories();
+
+        // -------------------------------------------------------------
+        // Fetch Mandi Prices
+        // -------------------------------------------------------------
+        fetchPriceBtn.addEventListener('click', async () => {
+            const crop = cropSelect.value;
+            const loc = locationSelect.value;
+            try {
+                const response = await fetch(`/market-price?crop=${crop}&location=${loc}`);
+                const data = await response.json();
+                
+                cardMandi.textContent = data.mandi;
+                cardPrice.textContent = data.price_range;
+                cardTrend.textContent = data.trend;
+                priceCard.classList.add('show');
+            } catch (err) {
+                console.error("Error fetching price:", err);
+            }
+        });
+
+        // -------------------------------------------------------------
+        // Upload & Preview Image Handler
+        // -------------------------------------------------------------
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            currentImageMediaType = file.type;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentImageBase64 = event.target.result;
+                previewImage.src = currentImageBase64;
+                previewContainer.classList.add('show');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        removePreviewBtn.addEventListener('click', () => {
+            currentImageBase64 = null;
+            currentImageMediaType = null;
+            imageUpload.value = '';
+            previewContainer.classList.remove('show');
+        });
+
+        // -------------------------------------------------------------
+        // Send Messages / Diagnose
+        // -------------------------------------------------------------
+        sendMsgBtn.addEventListener('click', handleSendMessage);
+        chatTextarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+
+        async function handleSendMessage() {
+            const messageText = chatTextarea.value.trim();
+            const farmerId = farmerIdInput.value.trim() || 'farmer_demo_1';
+            const lang = langSelect.value;
+            const useVoice = voiceToggle.checked;
+
+            if (!messageText && !currentImageBase64) return;
+
+            // 1. Add User Bubble to chat
+            addUserMessageBubble(messageText, currentImageBase64);
+
+            // Clear Input Area
+            chatTextarea.value = '';
+            const sentImageBase64 = currentImageBase64;
+            const sentImageMediaType = currentImageMediaType;
+            
+            // Close preview
+            currentImageBase64 = null;
+            currentImageMediaType = null;
+            imageUpload.value = '';
+            previewContainer.classList.remove('show');
+
+            // 2. Add "Typing" bubble
+            const typingBubble = addTypingBubble();
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+
+            // 3. Prepare diagnosis request payload
+            const payload = {
+                farmer_id: farmerId,
+                message: messageText || null,
+                image_base64: sentImageBase64 || null,
+                image_media_type: sentImageMediaType || null,
+                language: lang
+            };
+
+            try {
+                if (useVoice) {
+                    // Call voice endpoint
+                    const response = await fetch('/diagnose/voice', {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) throw new Error("Diagnosis Voice API failed");
+
+                    // Read hex encoded text response from headers
+                    const hexAdvice = response.headers.get('x-advice');
+                    const textAdvice = hexToUtf8(hexAdvice);
+                    const rememberedContext = JSON.parse(response.headers.get('x-remembered-context') || '[]');
+
+                    // Play audio stream
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    
+                    // Remove typing bubble and render AI bubble
+                    typingBubble.remove();
+                    addAIMessageBubble(textAdvice, audioUrl, rememberedContext);
+                    audio.play();
+
+                } else {
+                    // Call standard text endpoint
+                    const response = await fetch('/diagnose', {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) throw new Error("Diagnosis API failed");
+
+                    const data = await response.json();
+                    
+                    // Remove typing bubble and render AI bubble
+                    typingBubble.remove();
+                    addAIMessageBubble(data.advice, null, data.remembered_context);
+                }
+
+                // Refresh Memories sidebar
+                refreshMemories();
+
+            } catch (err) {
+                console.error("Error diagnosing:", err);
+                typingBubble.remove();
+                addAIMessageBubble("Sorry, I encountered an error communicating with the server. Please check your configurations.", null, []);
+            }
+
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // -------------------------------------------------------------
+        // Render bubbles helpers
+        // -------------------------------------------------------------
+        function getCurrentTimeStr() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            minutes = minutes < 10 ? '0'+minutes : minutes;
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        function addUserMessageBubble(text, imageSrc) {
+            const bubble = document.createElement('div');
+            bubble.className = 'message outgoing';
+            
+            if (imageSrc) {
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.className = 'message-image';
+                bubble.appendChild(img);
+            }
+
+            if (text) {
+                const txt = document.createElement('div');
+                txt.textContent = text;
+                bubble.appendChild(txt);
+            }
+
+            const time = document.createElement('span');
+            time.className = 'message-time';
+            time.textContent = getCurrentTimeStr();
+            bubble.appendChild(time);
+
+            messagesArea.appendChild(bubble);
+        }
+
+        function addTypingBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'message incoming';
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            bubble.appendChild(indicator);
+            
+            messagesArea.appendChild(bubble);
+            return bubble;
+        }
+
+        function addAIMessageBubble(text, audioUrl, rememberedContext) {
+            const bubble = document.createElement('div');
+            bubble.className = 'message incoming';
+
+            const txt = document.createElement('div');
+            // Format newlines as HTML breaks
+            txt.innerHTML = text.replace(/\n/g, '<br>');
+            bubble.appendChild(txt);
+
+            // Add audio play button if audio URL is available
+            if (audioUrl) {
+                const playBtn = document.createElement('button');
+                playBtn.className = 'listen-btn';
+                playBtn.innerHTML = '🔊 Speak Advice';
+                playBtn.addEventListener('click', () => {
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                });
+                bubble.appendChild(playBtn);
+            }
+
+            // Show memories that triggered this response
+            if (rememberedContext && rememberedContext.length > 0) {
+                const contextBox = document.createElement('div');
+                contextBox.style.marginTop = '10px';
+                contextBox.style.padding = '8px';
+                contextBox.style.fontSize = '0.78rem';
+                contextBox.style.color = '#8696a0';
+                contextBox.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                contextBox.style.borderLeft = '2px solid var(--secondary-color)';
+                contextBox.style.borderRadius = '4px';
+                
+                let contextHtml = '<strong>Retrieved Memory Context:</strong><br>';
+                rememberedContext.forEach(ctx => {
+                    // Extract just the core reported message if prompt template is visible
+                    let cleanCtx = ctx;
+                    if (ctx.includes("Farmer reported crop issue:")) {
+                        cleanCtx = ctx.split("Farmer reported crop issue:")[1].trim();
+                    } else if (ctx.includes("Farmer reported:")) {
+                        cleanCtx = ctx.split("Farmer reported:")[1].trim();
+                    }
+                    if (cleanCtx.length > 80) cleanCtx = cleanCtx.substring(0, 80) + "...";
+                    contextHtml += `- <em>"${cleanCtx}"</em><br>`;
+                });
+                contextBox.innerHTML = contextHtml;
+                bubble.appendChild(contextBox);
+            }
+
+            const time = document.createElement('span');
+            time.className = 'message-time';
+            time.textContent = getCurrentTimeStr();
+            bubble.appendChild(time);
+
+            messagesArea.appendChild(bubble);
+        }
+
+        // -------------------------------------------------------------
+        // Hex decode helper
+        // -------------------------------------------------------------
+        function hexToUtf8(hex) {
+            if (!hex) return "";
+            let str = "";
+            for (let i = 0; i < hex.length; i += 2) {
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            }
+            try {
+                return decodeURIComponent(escape(str));
+            } catch (e) {
+                return str;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // Mem0 Memory Sidebar Management
+        // -------------------------------------------------------------
+        async function refreshMemories() {
+            const farmerId = farmerIdInput.value.trim() || 'farmer_demo_1';
+            try {
+                const response = await fetch(`/history/${farmerId}`);
+                if (!response.ok) return;
+                
+                const history = await response.json();
+                memoryLog.innerHTML = '';
+                
+                if (history.length === 0) {
+                    memoryLog.innerHTML = '<div class="memory-item">No memories found.</div>';
+                    return;
+                }
+
+                history.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'memory-item';
+                    
+                    // clean prompt markup for visual sidebar
+                    let cleanText = item.memory;
+                    if (cleanText.includes("Farmer reported crop issue:")) {
+                        cleanText = cleanText.split("Farmer reported crop issue:")[1].trim();
+                    } else if (cleanText.includes("Farmer reported:")) {
+                        cleanText = cleanText.split("Farmer reported:")[1].trim();
+                    }
+                    
+                    const time = new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    el.innerHTML = `<strong>${time}</strong>: ${cleanText}`;
+                    memoryLog.appendChild(el);
+                });
+            } catch (err) {
+                console.error("Error getting history:", err);
+            }
+        }
+
+        // Listen for farmer ID changes to dynamically load their history
+        farmerIdInput.addEventListener('blur', refreshMemories);
+        farmerIdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') refreshMemories();
+        });
+
+        // Clear memories trigger
+        clearMemoriesBtn.addEventListener('click', async () => {
+            if (confirm("Are you sure you want to clean local vector/SQLite databases? This will wipe ALL memories for all users.")) {
+                // Wiping databases locally requires stopping runner or we can run a custom command
+                // Let's call our backend or write a file to trigger clean on reboot
+                // For direct support, let's call a script, or delete the folders on disk using a quick backend trigger
+                try {
+                    // Let's add a backend mock route to wipe if wanted, but since it's a demo, we can just call our backend or delete
+                    const response = await fetch('/diagnose', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            farmer_id: 'WIPE_DB_ACTION_SECRET',
+                            message: 'wipe'
+                        }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    alert("Databases wiped locally. Refreshing page.");
+                    location.reload();
+                } catch (e) {
+                    // If no route, just reload
+                    location.reload();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

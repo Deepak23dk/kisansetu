@@ -1,0 +1,27 @@
+version: api.keploy.io/v1beta1
+kind: Http
+name: test-3
+spec:
+  metadata:
+    name: diagnose
+    operation: POST
+  request:
+    method: POST
+    url: /diagnose
+    header:
+      accept: '*/*'
+      connection: keep-alive
+      content-length: '87'
+      content-type: application/json
+    body: '{"farmer_id":"farmer_1","message":"What did I report about my tomato?","language":"en"}'
+  response:
+    status_code: 200
+    header:
+      content-type: application/json
+    body: '{"farmer_id":"farmer_1","advice":"[Fallback Stub Advice]\nDiagnosis: Suspected
+      Tomato Early Blight or Tomato Leaf Curl Virus.\nRecommended Action:\n1. Spray
+      organic Neem Oil (2-3 ml per liter of water) to control whitefly vectors.\n2.
+      Remove and destroy infected lower leaves to stop fungal spores from spreading.\n3.
+      Maintain proper spacing between plants and practice crop rotation next season.","remembered_context":["Farmer
+      reported crop issue: My tomato leaf has yellow spots and wilt"]}'
+    status_message: OK

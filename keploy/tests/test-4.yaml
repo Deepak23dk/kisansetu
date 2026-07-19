@@ -1,0 +1,21 @@
+version: api.keploy.io/v1beta1
+kind: Http
+name: test-4
+spec:
+  metadata:
+    name: history_farmer_1
+    operation: GET
+  request:
+    method: GET
+    url: /history/farmer_1
+    header:
+      accept: '*/*'
+      connection: keep-alive
+    body: ''
+  response:
+    status_code: 200
+    header:
+      content-type: application/json
+    body: '[{"id":"0f3ee50f-593f-4efa-9bcf-13cd1168a407","memory":"Farmer reported
+      crop issue: My tomato leaf has yellow spots and wilt","created_at":"2026-07-19T07:37:17.929307+00:00"}]'
+    status_message: OK
